@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Export Planning Crèche</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 600px; margin: 2em auto; padding: 1em; }
+  h1 { text-align: center; }
+  label, select, button { font-size: 1rem; }
+  table { width: 100%; border-collapse: collapse; margin-top: 1em; }
+  th, td { border: 1px solid #ccc; padding: 0.5em; text-align: center; }
+  th { background-color: #eee; }
+  #export-btn { margin-top: 1em; padding: 0.5em 1em; cursor: pointer; }
+</style>
+</head>
+<body>
+<h1>Planning Mensuel de la Crèche</h1>
+
+<label for="month-select">Choisissez un mois :</label>
+<select id="month-select"></select>
+
+<table id="planning-table" aria-label="Planning mensuel">
+  <thead>
+    <tr>
+      <th>Jour</th>
+      <th>Enfants présents</th>
+      <th>Activité</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<button id="export-btn">Exporter le planning</button>
+
+<script>
+  // Données fictives pour 3 mois (jours, enfants, activité)
+  const plannings = {
+    '2026-11': [
+      { jour: '1', enfants: 15, activité: 'Peinture' },
+      { jour: '2', enfants: 13, activité: 'Jeux en extérieur' },
+      { jour: '3', enfants: 14, activité: 'Lecture' },
+      { jour: '4', enfants: 12, activité: 'Musique' },
+      // ...
+      { jour: '30', enfants: 16, activité: 'Pâtisserie' }
+    ],
+    '2026-12': [
+      { jour: '1', enfants: 14, activité: 'Décoration de Noël' },
+      { jour: '2', enfants: 15, activité: 'Jeux d\'hiver' },
+      { jour: '3', enfants: 13, activité: 'Conte de Noël' },
+      // ...
+      { jour: '31', enfants: 14, activité: 'Bilan de l\'année' }
+    ],
+    '2027-01': [
+      { jour: '1', enfants: 0, activité: 'Fermé' },
+      { jour: '2', enfants: 14, activité: 'Atelier cuisine' },
+      { jour: '3', enfants: 15, activité: 'Chant' },
+      // ...
+      { jour: '31', enfants: 13, activité: 'Jeux libres' }
+    ]
+  };
+
+  // Initialisation des mois dans le select
+  const monthSelect = document.getElementById('month-select');
+  const months = Object.keys(plannings);
+  const monthNames = {
+    '2026-11': 'Novembre 2026',
+    '2026-12': 'Décembre 2026',
+    '2027-01': 'Janvier 2027'
+  };
+
+  months.forEach(m => {
+    const option = document.createElement('option');
+    option.value = m;
+    option.textContent = monthNames[m];
+    monthSelect.appendChild(option);
+  });
+
+  const tbody = document.querySelector('#planning-table tbody');
+
+  function afficherPlanning(mois) {
+    tbody.innerHTML = ''; // Vider le tableau
+    const jours = plannings[mois];
+    if (!jours) {
+      tbody.innerHTML = '<tr><td colspan="3">Aucun planning disponible</td></tr>';
+      return;
+    }
+    jours.forEach(entry => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${entry.jour}</td><td>${entry.enfants}</td><td>${entry.activité}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Afficher planning initial (premier mois)
+  afficherPlanning(months[0]);
+  monthSelect.value = months[0];
+
+  // Quand on change le mois, afficher le planning correspondant (CA1)
+  monthSelect.addEventListener('change', e => {
+    afficherPlanning(e.target.value);
+  });
+
+  // Exporter le planning sélectionné (CA2 et CA3)
+  document.getElementById('export-btn').addEventListener('click', () => {
+    const mois = monthSelect.value;
+    const data = plannings[mois];
+    if (!data) {
+      alert('Aucun planning à exporter pour ce mois.');
+      return;
+    }
+
+    // Générer un texte pour le fichier exporté
+    let texteExport = `Planning de la crèche - ${monthNames[mois]}\n\nJour | Enfants présents | Activité\n`;
+    texteExport += '-'.repeat(40) + '\n';
+    data.forEach(entry => {
+      // Alignement simple, tabulation directement
+      texteExport += `${entry.jour} | ${entry.enfants} | ${entry.activité}\n`;
+    });
+
+    // Créer un fichier texte et déclencher le téléchargement
+    const blob = new Blob([texteExport], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `planning-${mois}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+</script>
+</body>
+</html>
